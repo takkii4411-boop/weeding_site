@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Aropn Weddings Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-layout">
+    <%- include('sidebar') %>
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1>Dashboard</h1>
+        <div class="admin-user">Welcome, <%= session.admin.username %></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number"><%= clientCount %></div>
+          <div class="stat-label">Total Clients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= photoCount %></div>
+          <div class="stat-label">Total Photos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= feedbackCount %></div>
+          <div class="stat-label">Feedbacks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= contactCount %></div>
+          <div class="stat-label">Contact Queries</div>
+        </div>
+      </div>
+      <% if (recentContacts.length > 0) { %>
+      <div class="section">
+        <h2>Recent Contact Queries</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Event</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentContacts.forEach(c => { %>
+            <tr>
+              <td><%= c.name %></td>
+              <td><%= c.email %></td>
+              <td><%= c.event_type || '-' %></td>
+              <td><%= new Date(c.created_at).toLocaleDateString() %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </main>
+  </div>
+</body>
+</html>

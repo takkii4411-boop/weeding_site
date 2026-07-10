@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= client.name %>'s Gallery - Aropn Weddings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+    .gallery-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 60px 20px; text-align: center; position: relative; overflow: hidden; }
+    .gallery-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="0.9em" font-size="90">💍</text></svg>') repeat; opacity: 0.05; }
+    .gallery-header h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; background: linear-gradient(135deg, #f5af19 0%, #f12711 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .gallery-header p { color: #999; font-size: 1.1rem; }
+    .gallery-header .event-info { margin-top: 15px; color: #666; font-size: 0.9rem; }
+    .gallery-header .event-info span { margin: 0 10px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 3/2; cursor: pointer; transition: transform 0.3s ease; }
+    .photo-item:hover { transform: scale(1.02); }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .empty-state { text-align: center; padding: 80px 20px; color: #666; }
+    .empty-state p { font-size: 1.2rem; }
+    .feedback-section { max-width: 600px; margin: 60px auto; padding: 30px; background: #111; border-radius: 16px; border: 1px solid #222; }
+    .feedback-section h2 { text-align: center; margin-bottom: 8px; font-family: 'Playfair Display', serif; font-size: 1.8rem; background: linear-gradient(135deg, #f5af19 0%, #f12711 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .feedback-section > p { text-align: center; color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; margin-bottom: 6px; color: #ccc; font-size: 0.9rem; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 0.95rem; font-family: inherit; transition: border-color 0.3s; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #f5af19; }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .star-rating { display: flex; gap: 8px; direction: rtl; justify-content: center; }
+    .star-rating input { display: none; }
+    .star-rating label { font-size: 2rem; color: #444; cursor: pointer; transition: color 0.2s; }
+    .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #f5af19; }
+    .btn { padding: 12px 28px; background: linear-gradient(135deg, #f5af19, #f12711); color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.3s; width: 100%; }
+    .btn:hover { opacity: 0.9; }
+    .alert { padding: 14px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+    .alert-success { background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); color: #22cb5e; }
+    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; }
+    .previous-feedback { margin-top: 30px; }
+    .previous-feedback h3 { color: #999; margin-bottom: 15px; font-size: 1rem; }
+    .feedback-card { background: #1a1a1a; border: 1px solid #222; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .feedback-card .fb-name { font-weight: 600; color: #fff; }
+    .feedback-card .fb-rating { color: #f5af19; }
+    .feedback-card .fb-message { color: #999; margin-top: 6px; font-size: 0.9rem; }
+    .feedback-card .fb-date { color: #555; font-size: 0.8rem; margin-top: 4px; }
+    .lightbox { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
+    .lightbox.active { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+    .lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; background: none; border: none; }
+    footer { text-align: center; padding: 30px; color: #444; font-size: 0.85rem; }
+    @media (max-width: 768px) { .gallery-header h1 { font-size: 1.8rem; } .photo-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
+  </style>
+</head>
+<body>
+  <div class="gallery-header">
+    <h1><%= client.name %>'s Gallery</h1>
+    <% if (client.event_type || client.event_date) { %>
+    <div class="event-info">
+      <% if (client.event_type) { %><span>Event: <%= client.event_type %></span><% } %>
+      <% if (client.event_date) { %><span>Date: <%= client.event_date %></span><% } %>
+    </div>
+    <% } %>
+    <p>Thank you for choosing Aropn Weddings</p>
+  </div>
+
+  <div class="container">
+    <% if (photos.length === 0) { %>
+    <div class="empty-state">
+      <p>Your gallery is being prepared. Photos will appear here soon!</p>
+    </div>
+    <% } else { %>
+    <div class="photo-grid">
+      <% photos.forEach(p => { %>
+      <div class="photo-item" onclick="openLightbox('<%= p.cloudinary_url || '/uploads/' + p.filename %>')">
+        <img src="<%= p.cloudinary_url || '/uploads/' + p.filename %>" alt="<%= p.original_name %>" loading="lazy">
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <div class="feedback-section">
+      <h2>Share Your Feedback</h2>
+      <p>We'd love to hear your thoughts!</p>
+      <% if (success) { %>
+      <div class="alert alert-success"><%= success %></div>
+      <% } %>
+      <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+      <% } %>
+      <form action="/gallery/<%= client.gallery_token %>/feedback" method="POST">
+        <div class="form-group">
+          <label>Your Rating *</label>
+          <div class="star-rating">
+            <input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label>
+            <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+            <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+            <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+            <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="name">Your Name *</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Your Email *</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message (Optional)</label>
+          <textarea id="message" name="message" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn">Submit Feedback</button>
+      </form>
+
+      <% if (feedback.length > 0) { %>
+      <div class="previous-feedback">
+        <h3>Previous Feedback</h3>
+        <% feedback.forEach(f => { %>
+        <div class="feedback-card">
+          <div class="fb-name"><%= f.name %></div>
+          <div class="fb-rating"><%= '★'.repeat(f.rating) %><%= '☆'.repeat(5-f.rating) %></div>
+          <% if (f.message) { %><div class="fb-message"><%= f.message %></div><% } %>
+          <div class="fb-date"><%= new Date(f.created_at).toLocaleDateString() %></div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close">&times;</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <footer>&copy; 2024 Aropn Weddings. All rights reserved.</footer>
+
+  <script>
+    function openLightbox(src) {
+      document.getElementById('lightboxImg').src = src;
+      document.getElementById('lightbox').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  </script>
+</body>
+</html>

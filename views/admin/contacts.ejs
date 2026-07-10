@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts - Aropn Weddings Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-layout">
+    <%- include('sidebar') %>
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1>Contact Queries</h1>
+      </div>
+      <% if (contacts.length === 0) { %>
+      <div class="empty-state"><p>No contact queries yet.</p></div>
+      <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Event</th>
+            <th>Date</th>
+            <th>Message</th>
+            <th>Received</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% contacts.forEach(c => { %>
+          <tr>
+            <td><%= c.name %></td>
+            <td><%= c.email %></td>
+            <td><%= c.phone || '-' %></td>
+            <td><%= c.event_type || '-' %></td>
+            <td><%= c.event_date || '-' %></td>
+            <td><%= c.message %></td>
+            <td><%= new Date(c.created_at).toLocaleString() %></td>
+            <td>
+              <form action="/admin/contact/delete/<%= c.id %>" method="POST" onsubmit="return confirm('Delete this query?')">
+                <button class="btn btn-sm btn-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </main>
+  </div>
+</body>
+</html>

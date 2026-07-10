@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery - <%= client.name %> - Aropn Weddings Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-layout">
+    <%- include('sidebar') %>
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1>Gallery: <%= client.name %></h1>
+        <a href="/admin/clients" class="btn">&larr; Back to Clients</a>
+      </div>
+
+      <div class="upload-section">
+        <h2>Upload Photos</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="upload-area" id="dropZone">
+            <p>Drag & drop photos here or click to select</p>
+            <input type="file" id="fileInput" name="photos" multiple accept="image/*" hidden>
+          </div>
+          <div id="fileList"></div>
+          <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>Upload Photos</button>
+          <div id="uploadProgress"></div>
+        </form>
+      </div>
+
+      <div class="gallery-grid">
+        <% if (photos.length === 0) { %>
+        <p style="grid-column:1/-1;text-align:center;color:#999;">No photos uploaded yet.</p>
+        <% } %>
+        <% photos.forEach(p => { %>
+        <div class="gallery-item">
+          <img src="<%= p.cloudinary_url || '/uploads/' + p.filename %>" alt="<%= p.original_name %>">
+          <div class="gallery-item-overlay">
+            <span><%= p.original_name %></span>
+            <form action="/admin/photo/delete/<%= p.id %>" method="POST" onsubmit="return confirm('Delete this photo?')">
+              <button class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progress = document.getElementById('uploadProgress');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      fileInput.files = e.dataTransfer.files;
+      updateFileList();
+    });
+    fileInput.addEventListener('change', updateFileList);
+
+    function updateFileList() {
+      const files = fileInput.files;
+      if (files.length === 0) { fileList.innerHTML = ''; uploadBtn.disabled = true; return; }
+      fileList.innerHTML = '<p>' + files.length + ' file(s) selected</p>';
+      uploadBtn.disabled = false;
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData();
+      for (let f of fileInput.files) fd.append('photos', f);
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Uploading...';
+      progress.innerHTML = '<div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>';
+      try {
+        const res = await fetch('/admin/upload/<%= client.id %>', { method:'POST', body: fd });
+        const json = await res.json();
+        if (json.success) {
+          let msg = json.uploaded + ' photo(s) uploaded successfully!';
+          if (json.errors > 0) msg += ' (' + json.errors + ' failed)';
+          progress.innerHTML = '<p class="success">' + msg + '</p>';
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          progress.innerHTML = '<p class="error">' + (json.error || 'Upload failed') + '</p>';
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = 'Upload Photos';
+        }
+      } catch (err) {
+        progress.innerHTML = '<p class="error">Upload failed</p>';
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload Photos';
+      }
+    });
+  </script>
+</body>
+</html>

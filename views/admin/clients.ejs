@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients - Aropn Weddings Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-layout">
+    <%- include('sidebar') %>
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1>Clients</h1>
+        <button class="btn btn-primary" onclick="showAddModal()">+ Add Client</button>
+      </div>
+
+      <% if (clients.length === 0) { %>
+      <div class="empty-state">
+        <p>No clients yet. Add your first client to get started.</p>
+      </div>
+      <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Event</th>
+            <th>Photos</th>
+            <th>Gallery Link</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% clients.forEach(c => { %>
+          <tr>
+            <td><%= c.name %></td>
+            <td><%= c.email %></td>
+            <td><%= c.phone || '-' %></td>
+            <td><%= c.event_type || '-' %></td>
+            <td><%= countMap[c.id] || 0 %></td>
+            <td>
+              <input type="text" class="link-input" value="http://localhost:3000/gallery/<%= c.gallery_token %>" readonly onclick="this.select()">
+              <button class="btn btn-sm" onclick="copyLink(this)">Copy</button>
+            </td>
+            <td>
+              <a href="/admin/gallery/<%= c.id %>" class="btn btn-sm btn-primary">Gallery</a>
+              <form action="/admin/clients/delete/<%= c.id %>" method="POST" style="display:inline" onsubmit="return confirm('Delete this client and all photos?')">
+                <button class="btn btn-sm btn-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </main>
+  </div>
+
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="hideAddModal()">&times;</span>
+      <h2>Add New Client</h2>
+      <form id="addClientForm">
+        <div class="form-group">
+          <label for="name">Name *</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone</label>
+          <input type="text" id="phone" name="phone">
+        </div>
+        <div class="form-group">
+          <label for="event_type">Event Type</label>
+          <select id="event_type" name="event_type">
+            <option value="">Select</option>
+            <option value="Pre-Wedding">Pre-Wedding</option>
+            <option value="Wedding">Wedding</option>
+            <option value="Reception">Reception</option>
+            <option value="Engagement">Engagement</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="event_date">Event Date</label>
+          <input type="date" id="event_date" name="event_date">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Add Client</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showAddModal() { document.getElementById('addModal').style.display = 'block'; }
+    function hideAddModal() { document.getElementById('addModal').style.display = 'none'; }
+    document.getElementById('addClientForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+      const res = await fetch('/admin/clients/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      const json = await res.json();
+      if (json.success) { location.reload(); }
+      else { alert(json.error || 'Error'); }
+    });
+    function copyLink(btn) {
+      const input = btn.previousElementSibling;
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+  </script>
+</body>
+</html>
