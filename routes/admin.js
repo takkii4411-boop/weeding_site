@@ -62,8 +62,20 @@ router.post('/clients/add', requireAdmin, (req, res) => {
   }
 });
 
-router.post('/clients/delete/:id', requireAdmin, (req, res) => {
+router.post('/clients/delete/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
+  const photos = db.prepare('SELECT * FROM photos WHERE client_id = ?').all(id);
+  const fs = require('fs');
+  const cd = require('../utils/cloudinary');
+  for (const photo of photos) {
+    if (photo.filename) {
+      const filePath = path.join(__dirname, '..', 'uploads', photo.filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+    if (photo.cloudinary_id) {
+      await cd.deletePhoto(photo.cloudinary_id);
+    }
+  }
   db.prepare('DELETE FROM clients WHERE id = ?').run(id);
   res.redirect('/admin/clients');
 });
