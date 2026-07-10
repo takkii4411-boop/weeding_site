@@ -42,7 +42,7 @@
             <td><%= c.event_type || '-' %></td>
             <td><%= countMap[c.id] || 0 %></td>
             <td>
-              <input type="text" class="link-input" value="http://localhost:3000/gallery/<%= c.gallery_token %>" readonly onclick="this.select()">
+              <input type="text" class="link-input" value="<%= baseUrl %>/gallery/<%= c.gallery_token %>" readonly onclick="this.select()">
               <button class="btn btn-sm" onclick="copyLink(this)">Copy</button>
             </td>
             <td>

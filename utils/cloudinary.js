@@ -7,7 +7,13 @@ cloudinary.config({
 });
 
 function isConfigured() {
-  return !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+  const configured = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+  if (!configured) {
+    console.warn('⚠ Cloudinary NOT configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in .env or Render env vars.');
+  } else {
+    console.log('✓ Cloudinary configured for cloud: ' + process.env.CLOUDINARY_CLOUD_NAME);
+  }
+  return configured;
 }
 
 async function uploadPhoto(filePath, originalName) {

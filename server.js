@@ -7,9 +7,10 @@ const adminRoutes = require('./routes/admin');
 const clientRoutes = require('./routes/client');
 const contactRoutes = require('./routes/contact');
 const db = require('./database/db');
+const { isConfigured } = require('./utils/cloudinary');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -30,6 +31,7 @@ app.use(session({
 app.use((req, res, next) => {
   res.locals.session = req.session;
   res.locals.currentPath = req.path;
+  res.locals.baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
   next();
 });
 
@@ -44,4 +46,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  isConfigured();
 });
