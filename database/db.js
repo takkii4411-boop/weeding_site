@@ -66,7 +66,11 @@ db.exec(`
 // Migrations: add missing columns for existing databases
 const migrations = [
   "ALTER TABLE photos ADD COLUMN cloudinary_id TEXT",
-  "ALTER TABLE photos ADD COLUMN cloudinary_url TEXT"
+  "ALTER TABLE photos ADD COLUMN cloudinary_url TEXT",
+  "ALTER TABLE photos ADD COLUMN r2_url TEXT",
+  "ALTER TABLE photos ADD COLUMN r2_key TEXT",
+  "ALTER TABLE photos ADD COLUMN file_size INTEGER DEFAULT 0",
+  "ALTER TABLE photos ADD COLUMN upload_mode TEXT DEFAULT 'compressed'"
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists, ignore */ }

@@ -6,6 +6,20 @@
   <title>Clients - Aropn Weddings Admin</title>
   <link rel="stylesheet" href="/css/admin.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .delete-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;}
+    .delete-modal{background:#111;border:1px solid #333;border-radius:16px;padding:40px;text-align:center;max-width:420px;width:90%;}
+    .delete-spinner{width:60px;height:60px;border:4px solid #333;border-top-color:#f59e0b;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .delete-status{color:#ccc;font-size:1rem;margin:8px 0;}
+    .delete-sub{color:#999;font-size:0.85rem;margin:4px 0;}
+    .delete-progress{height:6px;background:#222;border-radius:6px;overflow:hidden;margin:16px 0;}
+    .delete-progress-fill{height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:6px;transition:width 0.4s;}
+    .fun-lines{color:#666;font-style:italic;font-size:0.8rem;min-height:20px;margin-top:8px;transition:opacity 0.3s;}
+    .delete-done{color:#22c55e;font-size:1.2rem;font-weight:600;}
+    .delete-fail{color:#ef4444;}
+    .row-deleting{opacity:0.4;pointer-events:none;transition:opacity 0.3s;}
+  </style>
 </head>
 <body>
   <div class="admin-layout">
@@ -35,7 +49,7 @@
         </thead>
         <tbody>
           <% clients.forEach(c => { %>
-          <tr>
+          <tr id="client-row-<%= c.id %>">
             <td><%= c.name %></td>
             <td><%= c.email %></td>
             <td><%= c.phone || '-' %></td>
@@ -47,9 +61,7 @@
             </td>
             <td>
               <a href="/admin/gallery/<%= c.id %>" class="btn btn-sm btn-primary">Gallery</a>
-              <form action="/admin/clients/delete/<%= c.id %>" method="POST" style="display:inline" onsubmit="return confirm('Delete this client and all photos?')">
-                <button class="btn btn-sm btn-danger">Delete</button>
-              </form>
+              <button class="btn btn-sm btn-danger" onclick="deleteClient(<%= c.id %>, '<%= c.name.replace(/'/g, "\\'") %>', <%= countMap[c.id] || 0 %>)">Delete</button>
             </td>
           </tr>
           <% }) %>
@@ -57,6 +69,16 @@
       </table>
       <% } %>
     </main>
+  </div>
+
+  <div id="deleteOverlay" class="delete-overlay" style="display:none;">
+    <div class="delete-modal">
+      <div class="delete-spinner" id="deleteSpinner"></div>
+      <div class="delete-status" id="deleteStatus">Deleting client...</div>
+      <div class="delete-sub" id="deleteSub"></div>
+      <div class="delete-progress"><div class="delete-progress-fill" id="deleteProgressFill" style="width:0%"></div></div>
+      <div class="fun-lines" id="funLines"></div>
+    </div>
   </div>
 
   <div id="addModal" class="modal">
@@ -114,6 +136,85 @@
       navigator.clipboard.writeText(input.value);
       btn.textContent = 'Copied!';
       setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+
+    const deleteFunLines = [
+      'Carefully packing up the memories...',
+      'Saying goodbye to the gallery...',
+      'Almost there, hang tight...',
+      'This client had good taste!',
+      'Cleaning up the digital space...',
+      'Good things take time...',
+      'Almost done, just a bit more...',
+      'Your storage thanks you!',
+      'Tidying up the portfolio...',
+      'One less client, one less headache!'
+    ];
+
+    async function deleteClient(id, name, photoCount) {
+      if (!confirm('Delete "' + name + '" and all ' + photoCount + ' photo(s)?')) return;
+
+      const overlay = document.getElementById('deleteOverlay');
+      const statusEl = document.getElementById('deleteStatus');
+      const subEl = document.getElementById('deleteSub');
+      const progressFill = document.getElementById('deleteProgressFill');
+      const spinner = document.getElementById('deleteSpinner');
+      const funEl = document.getElementById('funLines');
+
+      overlay.style.display = 'flex';
+      spinner.style.display = 'block';
+      statusEl.className = 'delete-status';
+      statusEl.innerHTML = 'Deleting <strong>' + name + '</strong>...';
+      subEl.textContent = photoCount > 0 ? photoCount + ' photo(s) to clean up' : 'No photos to remove';
+      progressFill.style.width = '10%';
+      funEl.textContent = deleteFunLines[0];
+
+      let funIdx = 0;
+      const funInterval = setInterval(() => {
+        funIdx = (funIdx + 1) % deleteFunLines.length;
+        funEl.style.opacity = '0';
+        setTimeout(() => { funEl.textContent = deleteFunLines[funIdx]; funEl.style.opacity = '1'; }, 300);
+      }, 2500);
+
+      try {
+        const res = await fetch('/admin/clients/delete/' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        clearInterval(funInterval);
+
+        if (res.ok) {
+          progressFill.style.width = '100%';
+          spinner.style.display = 'none';
+          statusEl.className = 'delete-done';
+          statusEl.innerHTML = '✓ Client deleted successfully!';
+          subEl.textContent = '';
+          funEl.textContent = '';
+
+          const row = document.getElementById('client-row-' + id);
+          if (row) {
+            row.classList.add('row-deleting');
+            setTimeout(() => {
+              overlay.style.display = 'none';
+              row.remove();
+              const tbody = document.querySelector('tbody');
+              if (tbody && tbody.children.length === 0) {
+                location.reload();
+              }
+            }, 800);
+          } else {
+            setTimeout(() => location.reload(), 800);
+          }
+        } else {
+          throw new Error('Delete failed');
+        }
+      } catch (err) {
+        clearInterval(funInterval);
+        spinner.style.display = 'none';
+        statusEl.className = 'delete-status delete-fail';
+        statusEl.innerHTML = '✗ Delete failed. Please try again.';
+        subEl.textContent = err.message || '';
+        funEl.textContent = '';
+        progressFill.style.width = '0%';
+        setTimeout(() => { overlay.style.display = 'none'; }, 2500);
+      }
     }
   </script>
 </body>

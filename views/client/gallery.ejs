@@ -49,6 +49,8 @@
     .lightbox.active { display: flex; }
     .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
     .lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; background: none; border: none; }
+    .photo-item .download-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; cursor: pointer; opacity: 0; transition: opacity 0.3s; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .photo-item:hover .download-btn { opacity: 1; }
     footer { text-align: center; padding: 30px; color: #444; font-size: 0.85rem; }
     @media (max-width: 768px) { .gallery-header h1 { font-size: 1.8rem; } .photo-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
   </style>
@@ -73,8 +75,17 @@
     <% } else { %>
     <div class="photo-grid">
       <% photos.forEach(p => { %>
-      <div class="photo-item" onclick="openLightbox('<%= p.cloudinary_url || '/uploads/' + p.filename %>')">
-        <img src="<%= p.cloudinary_url || '/uploads/' + p.filename %>" alt="<%= p.original_name %>" loading="lazy">
+      <% const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(p.original_name); %>
+      <% const mediaUrl = p.cloudinary_url || '/uploads/' + p.filename; %>
+      <% const downloadUrl = p.upload_mode === 'original' && p.r2_url ? p.r2_url : p.cloudinary_url || '/uploads/' + p.filename; %>
+      <% const downloadLabel = p.upload_mode === 'original' ? 'Download Original' : 'Download'; %>
+      <div class="photo-item" onclick="openLightbox('<%= mediaUrl %>', <%= isVideo %>)">
+        <% if (isVideo) { %>
+          <video src="<%= mediaUrl %>" muted preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>
+        <% } else { %>
+          <img src="<%= mediaUrl %>" alt="<%= p.original_name %>" loading="lazy">
+        <% } %>
+        <a href="<%= downloadUrl %>" download="<%= p.original_name %>" class="download-btn" onclick="event.stopPropagation()">&#8595; <%= downloadLabel %></a>
       </div>
       <% }) %>
     </div>

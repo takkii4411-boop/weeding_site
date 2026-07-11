@@ -33,8 +33,48 @@
           <div class="stat-label">Contact Queries</div>
         </div>
       </div>
+
+      <div class="section" style="margin-top:30px;">
+        <h2>Storage Usage</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
+          <div style="background:#111;border:1px solid #222;border-radius:12px;padding:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div>
+                <h3 style="color:#f5af19;font-size:1.1rem;margin:0;">Cloudflare R2</h3>
+                <small style="color:#666;">Original Quality Storage</small>
+              </div>
+              <span style="font-size:0.8rem;padding:4px 10px;border-radius:20px;background:<%= r2Configured ? 'rgba(34,197,94,0.15);color:#22cb5e' : 'rgba(239,68,68,0.15);color:#ef4444' %>"><%= r2Configured ? 'Connected' : 'Not Set' %></span>
+            </div>
+            <div style="background:#1a1a1a;border-radius:8px;height:24px;overflow:hidden;margin-bottom:10px;">
+              <div style="height:100%;width:<%= Math.min((parseFloat(r2Usage.usedMB) / 10240) * 100, 100) %>%;background:linear-gradient(90deg,#f59e0b,#f12711);border-radius:8px;transition:width 0.5s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:#999;font-size:0.85rem;">
+              <span><%= r2Usage.usedMB %> MB / 10,240 MB</span>
+              <span><%= r2Usage.totalCount %> files</span>
+            </div>
+          </div>
+
+          <div style="background:#111;border:1px solid #222;border-radius:12px;padding:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div>
+                <h3 style="color:#3b82f6;font-size:1.1rem;margin:0;">Cloudinary</h3>
+                <small style="color:#666;">Compressed Gallery Display</small>
+              </div>
+              <span style="font-size:0.8rem;padding:4px 10px;border-radius:20px;background:<%= cdConfigured ? 'rgba(34,197,94,0.15);color:#22cb5e' : 'rgba(239,68,68,0.15);color:#ef4444' %>"><%= cdConfigured ? 'Connected' : 'Not Set' %></span>
+            </div>
+            <div style="background:#1a1a1a;border-radius:8px;height:24px;overflow:hidden;margin-bottom:10px;">
+              <div style="height:100%;width:<%= Math.min((parseFloat(cdUsage.usedMB) / 25000) * 100, 100) %>%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:8px;transition:width 0.5s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:#999;font-size:0.85rem;">
+              <span><%= cdUsage.usedMB %> MB / 25,000 MB</span>
+              <span><%= cdUsage.totalCount %> files</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <% if (recentContacts.length > 0) { %>
-      <div class="section">
+      <div class="section" style="margin-top:30px;">
         <h2>Recent Contact Queries</h2>
         <table class="table">
           <thead>

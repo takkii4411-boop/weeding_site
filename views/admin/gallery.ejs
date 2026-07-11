@@ -6,6 +6,32 @@
   <title>Gallery - <%= client.name %> - Aropn Weddings Admin</title>
   <link rel="stylesheet" href="/css/admin.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin:12px 0;max-height:300px;overflow-y:auto;padding:4px;}
+    .preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:#1a1a1a;}
+    .preview-item img,.preview-item video{width:100%;height:100%;object-fit:cover;}
+    .preview-item .preview-name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#ccc;font-size:0.6rem;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .upload-file-status{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a1a;border-radius:8px;margin:4px 0;font-size:0.85rem;}
+    .upload-file-status .status-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0;}
+    .status-pending{background:#333;color:#999;}
+    .status-active{background:#f59e0b;color:#000;animation:pulse 1s infinite;}
+    .status-done{background:#22c55e;color:#fff;}
+    .status-fail{background:#ef4444;color:#fff;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.6;transform:scale(0.85);}}
+    .upload-progress-bar{height:4px;background:#222;border-radius:4px;overflow:hidden;margin-top:6px;}
+    .upload-progress-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#f12711);border-radius:4px;transition:width 0.3s;}
+    .btn-cancel{background:#ef4444;color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-weight:600;margin-left:8px;}
+    .btn-cancel:hover{background:#dc2626;}
+    .select-bar{display:none;align-items:center;gap:12px;padding:12px 16px;background:#111;border:1px solid #333;border-radius:10px;margin-bottom:16px;}
+    .select-bar.active{display:flex;}
+    .select-bar .count{color:#f5af19;font-weight:600;}
+    .gallery-item{position:relative;}
+    .gallery-item .select-check{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:6px;border:2px solid #555;background:rgba(0,0,0,0.5);cursor:pointer;display:none;z-index:5;appearance:none;-webkit-appearance:none;}
+    .gallery-item .select-check:checked{background:#f5af19;border-color:#f5af19;}
+    .gallery-item .select-check:checked::after{content:'✓';display:flex;align-items:center;justify-content:center;color:#000;font-size:0.75rem;font-weight:700;width:100%;height:100%;}
+    .select-mode .select-check{display:block;}
+    .select-mode .gallery-item-overlay form{display:none;}
+  </style>
 </head>
 <body>
   <div class="admin-layout">
@@ -13,31 +39,73 @@
     <main class="admin-main">
       <div class="admin-header">
         <h1>Gallery: <%= client.name %></h1>
-        <a href="/admin/clients" class="btn">&larr; Back to Clients</a>
+        <div style="display:flex;gap:8px;">
+          <a href="/admin/clients" class="btn">&larr; Back</a>
+        </div>
       </div>
 
       <div class="upload-section">
         <h2>Upload Photos</h2>
-        <form id="uploadForm" enctype="multipart/form-data">
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+          <div class="mode-selector" style="margin-bottom:16px;display:flex;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border:2px solid #333;border-radius:8px;transition:all 0.3s;" class="mode-option active" id="modeCompressed">
+              <input type="radio" data-mode="compressed" checked style="display:none;">
+              <span style="font-size:1.2rem;">⚡</span>
+              <div>
+                <strong>Compressed</strong>
+                <small style="display:block;color:#999;font-size:0.75rem;">Cloudinary - Fast loading</small>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border:2px solid #333;border-radius:8px;transition:all 0.3s;" class="mode-option" id="modeOriginal">
+              <input type="radio" data-mode="original" style="display:none;">
+              <span style="font-size:1.2rem;">📷</span>
+              <div>
+                <strong>Original Quality</strong>
+                <small style="display:block;color:#999;font-size:0.75rem;">R2 Storage + Cloudinary Display</small>
+              </div>
+            </label>
+          </div>
           <div class="upload-area" id="dropZone">
             <p>Drag & drop photos here or click to select</p>
-            <input type="file" id="fileInput" name="photos" multiple accept="image/*" hidden>
+            <input type="file" id="fileInput" name="photos" multiple accept="image/*,video/*" hidden>
           </div>
+          <div id="previewGrid" class="preview-grid"></div>
           <div id="fileList"></div>
-          <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>Upload Photos</button>
+          <div id="uploadActions" style="display:none;margin-top:12px;">
+            <button type="button" class="btn btn-primary" id="uploadBtn">Start Upload</button>
+            <button type="button" class="btn-cancel" id="cancelBtn" style="display:none;">Stop Upload</button>
+          </div>
           <div id="uploadProgress"></div>
         </form>
       </div>
 
-      <div class="gallery-grid">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <h2 style="margin:0;flex:1;">Photos (<span id="photoCount"><%= photos.length %></span>)</h2>
+        <button class="btn btn-sm" id="selectToggle" onclick="toggleSelectMode()">Select</button>
+        <button class="btn btn-sm btn-danger" id="deleteSelectedBtn" style="display:none;" onclick="deleteSelected()">Delete Selected</button>
+      </div>
+
+      <div id="selectBar" class="select-bar">
+        <button class="btn btn-sm" onclick="selectAll()">Select All</button>
+        <button class="btn btn-sm" onclick="deselectAll()">Deselect All</button>
+        <span class="count" id="selectedCount">0 selected</span>
+      </div>
+
+      <div class="gallery-grid" id="galleryGrid">
         <% if (photos.length === 0) { %>
         <p style="grid-column:1/-1;text-align:center;color:#999;">No photos uploaded yet.</p>
         <% } %>
         <% photos.forEach(p => { %>
-        <div class="gallery-item">
-          <img src="<%= p.cloudinary_url || '/uploads/' + p.filename %>" alt="<%= p.original_name %>">
+        <div class="gallery-item" data-id="<%= p.id %>">
+          <input type="checkbox" class="select-check" onchange="updateSelectedCount()">
+          <% if (/\.(mp4|mov|avi|mkv|webm)$/i.test(p.original_name)) { %>
+            <video src="<%= p.cloudinary_url || '/uploads/' + p.filename %>" muted loop onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+          <% } else { %>
+            <img src="<%= p.cloudinary_url || '/uploads/' + p.filename %>" alt="<%= p.original_name %>">
+          <% } %>
           <div class="gallery-item-overlay">
             <span><%= p.original_name %></span>
+            <span class="badge" style="font-size:0.7rem;padding:2px 6px;border-radius:4px;background:<%= p.upload_mode === 'original' ? '#f59e0b' : '#3b82f6' %>;color:#fff;"><%= p.upload_mode === 'original' ? 'Original' : 'Compressed' %></span>
             <form action="/admin/photo/delete/<%= p.id %>" method="POST" onsubmit="return confirm('Delete this photo?')">
               <button class="btn btn-sm btn-danger">Delete</button>
             </form>
@@ -53,7 +121,29 @@
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('fileList');
     const uploadBtn = document.getElementById('uploadBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const uploadActions = document.getElementById('uploadActions');
     const progress = document.getElementById('uploadProgress');
+    const previewGrid = document.getElementById('previewGrid');
+    const modeCompressed = document.getElementById('modeCompressed');
+    const modeOriginal = document.getElementById('modeOriginal');
+
+    let uploadCancelled = false;
+    let selectedFiles = [];
+
+    modeCompressed.addEventListener('click', () => {
+      modeCompressed.classList.add('active');
+      modeOriginal.classList.remove('active');
+      modeCompressed.style.borderColor = '#f5af19';
+      modeOriginal.style.borderColor = '#333';
+    });
+    modeOriginal.addEventListener('click', () => {
+      modeOriginal.classList.add('active');
+      modeCompressed.classList.remove('active');
+      modeOriginal.style.borderColor = '#f5af19';
+      modeCompressed.style.borderColor = '#333';
+    });
+    modeCompressed.style.borderColor = '#f5af19';
 
     dropZone.addEventListener('click', () => fileInput.click());
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -68,37 +158,201 @@
 
     function updateFileList() {
       const files = fileInput.files;
-      if (files.length === 0) { fileList.innerHTML = ''; uploadBtn.disabled = true; return; }
-      fileList.innerHTML = '<p>' + files.length + ' file(s) selected</p>';
+      selectedFiles = Array.from(files);
+      if (files.length === 0) {
+        fileList.innerHTML = '';
+        uploadActions.style.display = 'none';
+        previewGrid.innerHTML = '';
+        return;
+      }
+      fileList.innerHTML = '<p style="color:#999;font-size:0.85rem;">' + files.length + ' file(s) selected</p>';
+      uploadActions.style.display = 'flex';
       uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Start Upload (' + files.length + ')';
+      cancelBtn.style.display = 'none';
+      progress.innerHTML = '';
+      showPreviews(files);
     }
 
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fd = new FormData();
-      for (let f of fileInput.files) fd.append('photos', f);
-      uploadBtn.disabled = true;
-      uploadBtn.textContent = 'Uploading...';
-      progress.innerHTML = '<div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>';
-      try {
-        const res = await fetch('/admin/upload/<%= client.id %>', { method:'POST', body: fd });
-        const json = await res.json();
-        if (json.success) {
-          let msg = json.uploaded + ' photo(s) uploaded successfully!';
-          if (json.errors > 0) msg += ' (' + json.errors + ' failed)';
-          progress.innerHTML = '<p class="success">' + msg + '</p>';
-          setTimeout(() => location.reload(), 1500);
+    function showPreviews(files) {
+      previewGrid.innerHTML = '';
+      Array.from(files).forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        if (f.type.startsWith('image/')) {
+          const url = URL.createObjectURL(f);
+          div.innerHTML = '<img src="' + url + '" alt="' + f.name + '"><div class="preview-name">' + f.name + '</div>';
+        } else if (f.type.startsWith('video/')) {
+          const url = URL.createObjectURL(f);
+          div.innerHTML = '<video src="' + url + '" muted></video><div class="preview-name">' + f.name + '</div>';
         } else {
-          progress.innerHTML = '<p class="error">' + (json.error || 'Upload failed') + '</p>';
-          uploadBtn.disabled = false;
-          uploadBtn.textContent = 'Upload Photos';
+          div.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">' + f.name.split('.').pop().toUpperCase() + '</div><div class="preview-name">' + f.name + '</div>';
         }
-      } catch (err) {
-        progress.innerHTML = '<p class="error">Upload failed</p>';
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Upload Photos';
+        previewGrid.appendChild(div);
+      });
+    }
+
+    const funMessages = [
+      'Almost there, keep the excitement alive!',
+      'Your memories are getting packed...',
+      'Loading beauty into pixels...',
+      'Making your day unforgettable...',
+      'Processing magic, one click at a time...',
+      'Wrapping love in digital bows...',
+      'Your gallery is blooming!',
+      'Each photo tells a story, stay tuned...',
+      'Art takes time, hold on!',
+      'Developing your moments...'
+    ];
+
+    uploadBtn.addEventListener('click', async () => {
+      if (selectedFiles.length === 0) return;
+      uploadCancelled = false;
+      uploadBtn.style.display = 'none';
+      cancelBtn.style.display = 'inline-block';
+      const mode = document.querySelector('.mode-option.active input').getAttribute('data-mode');
+      const total = selectedFiles.length;
+      let done = 0;
+      let failed = 0;
+      const results = [];
+
+      progress.innerHTML = '<div id="uploadProgressBar" class="upload-progress-bar"><div class="upload-progress-fill" style="width:0%"></div></div>' +
+        '<div id="uploadStatusText" style="color:#999;font-size:0.85rem;margin-top:8px;">Preparing upload...</div>' +
+        '<div id="uploadFileList" style="max-height:200px;overflow-y:auto;margin-top:8px;"></div>';
+
+      const uploadFileList = document.getElementById('uploadFileList');
+      const progressBar = document.getElementById('uploadProgressBar').querySelector('.upload-progress-fill');
+      const statusText = document.getElementById('uploadStatusText');
+
+      for (let i = 0; i < total; i++) {
+        if (uploadCancelled) {
+          statusText.innerHTML = '<span style="color:#ef4444;">Upload cancelled. ' + done + ' of ' + total + ' uploaded.</span>';
+          cancelBtn.style.display = 'none';
+          uploadBtn.style.display = 'inline-block';
+          uploadBtn.textContent = 'Resume (' + (total - done) + ' remaining)';
+          selectedFiles = selectedFiles.slice(i);
+          return;
+        }
+
+        const f = selectedFiles[i];
+        const fileItem = document.createElement('div');
+        fileItem.className = 'upload-file-status';
+        fileItem.innerHTML = '<div class="status-icon status-active">⏳</div><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span><span style="color:#f59e0b;font-size:0.8rem;">Uploading...</span>';
+        uploadFileList.appendChild(fileItem);
+        uploadFileList.scrollTop = uploadFileList.scrollHeight;
+
+        const pct = Math.round(((i) / total) * 100);
+        progressBar.style.width = pct + '%';
+        statusText.textContent = funMessages[i % funMessages.length] + ' (' + (done + 1) + '/' + total + ')';
+
+        try {
+          const fd = new FormData();
+          fd.append('photos', f);
+          const res = await fetch('/admin/upload/<%= client.id %>?upload_mode=' + mode, { method: 'POST', body: fd });
+          const json = await res.json();
+          if (json.success && json.uploaded > 0) {
+            done++;
+            fileItem.innerHTML = '<div class="status-icon status-done">✓</div><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span><span style="color:#22c55e;font-size:0.8rem;">Done</span>';
+          } else {
+            failed++;
+            fileItem.innerHTML = '<div class="status-icon status-fail">✗</div><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span><span style="color:#ef4444;font-size:0.8rem;">Failed</span>';
+          }
+        } catch (err) {
+          failed++;
+          fileItem.innerHTML = '<div class="status-icon status-fail">✗</div><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span><span style="color:#ef4444;font-size:0.8rem;">Error</span>';
+        }
+      }
+
+      progressBar.style.width = '100%';
+      cancelBtn.style.display = 'none';
+      uploadBtn.style.display = 'inline-block';
+
+      if (failed === 0) {
+        statusText.innerHTML = '<span style="color:#22c55e;">All ' + done + ' photo(s) uploaded successfully!</span>';
+        uploadBtn.textContent = 'Upload More';
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        statusText.innerHTML = '<span style="color:#f59e0b;">' + done + ' uploaded, ' + failed + ' failed.</span>';
+        uploadBtn.textContent = 'Retry Failed';
       }
     });
+
+    cancelBtn.addEventListener('click', () => { uploadCancelled = true; });
+
+    let selectMode = false;
+    function toggleSelectMode() {
+      selectMode = !selectMode;
+      const grid = document.getElementById('galleryGrid');
+      const bar = document.getElementById('selectBar');
+      const delBtn = document.getElementById('deleteSelectedBtn');
+      const selBtn = document.getElementById('selectToggle');
+      if (selectMode) {
+        grid.classList.add('select-mode');
+        bar.classList.add('active');
+        delBtn.style.display = 'inline-block';
+        selBtn.textContent = 'Cancel';
+      } else {
+        grid.classList.remove('select-mode');
+        bar.classList.remove('active');
+        delBtn.style.display = 'none';
+        selBtn.textContent = 'Select';
+        deselectAll();
+      }
+    }
+
+    function selectAll() {
+      document.querySelectorAll('.select-check').forEach(c => c.checked = true);
+      updateSelectedCount();
+    }
+    function deselectAll() {
+      document.querySelectorAll('.select-check').forEach(c => c.checked = false);
+      updateSelectedCount();
+    }
+    function updateSelectedCount() {
+      const count = document.querySelectorAll('.select-check:checked').length;
+      document.getElementById('selectedCount').textContent = count + ' selected';
+    }
+
+    async function deleteSelected() {
+      const ids = [];
+      document.querySelectorAll('.select-check:checked').forEach(c => {
+        const item = c.closest('.gallery-item');
+        ids.push(item.getAttribute('data-id'));
+      });
+      if (ids.length === 0) return alert('Select photos first');
+      if (!confirm('Delete ' + ids.length + ' photo(s)?')) return;
+
+      const delBtn = document.getElementById('deleteSelectedBtn');
+      delBtn.textContent = 'Deleting...';
+      delBtn.disabled = true;
+
+      try {
+        const res = await fetch('/admin/photos/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        const json = await res.json();
+        if (json.success) {
+          ids.forEach(id => {
+            const el = document.querySelector('.gallery-item[data-id="' + id + '"]');
+            if (el) el.remove();
+          });
+          const remaining = document.querySelectorAll('.gallery-item').length;
+          document.getElementById('photoCount').textContent = remaining;
+          updateSelectedCount();
+          if (remaining === 0) {
+            document.getElementById('galleryGrid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No photos uploaded yet.</p>';
+          }
+        } else {
+          alert(json.error || 'Delete failed');
+        }
+      } catch (err) {
+        alert('Delete failed');
+      }
+      delBtn.textContent = 'Delete Selected';
+      delBtn.disabled = false;
+    }
   </script>
 </body>
 </html>

@@ -15,13 +15,14 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    if (ext && mime) return cb(null, true);
-    cb(new Error('Only image files (jpg, png, gif, webp) are allowed'));
+    const imageExts = /jpeg|jpg|png|gif|webp/;
+    const videoExts = /mp4|mov|avi|mkv|webm/;
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (imageExts.test(ext) && file.mimetype.startsWith('image/')) return cb(null, true);
+    if (videoExts.test(ext) && file.mimetype.startsWith('video/')) return cb(null, true);
+    cb(new Error('Only images (jpg, png, gif, webp) and videos (mp4, mov, webm) are allowed'));
   },
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: { fileSize: 100 * 1024 * 1024 }
 });
 
 function requireAdmin(req, res, next) {
@@ -29,13 +30,31 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-router.get('/dashboard', requireAdmin, (req, res) => {
+router.get('/dashboard', requireAdmin, async (req, res) => {
   const clientCount = db.prepare('SELECT COUNT(*) as count FROM clients').get().count;
   const photoCount = db.prepare('SELECT COUNT(*) as count FROM photos').get().count;
   const feedbackCount = db.prepare('SELECT COUNT(*) as count FROM feedback').get().count;
   const contactCount = db.prepare('SELECT COUNT(*) as count FROM contacts').get().count;
   const recentContacts = db.prepare('SELECT * FROM contacts ORDER BY created_at DESC LIMIT 5').all();
-  res.render('admin/dashboard', { clientCount, photoCount, feedbackCount, contactCount, recentContacts });
+
+  const r2 = require('../utils/r2');
+  const cd = require('../utils/cloudinary');
+  let r2Usage = { usedMB: '0', usedGB: '0', totalCount: 0 };
+  let cdUsage = { usedMB: '0', totalCount: 0 };
+  const r2Configured = r2.isConfigured();
+  const cdConfigured = cd.isConfigured();
+
+  if (r2Configured) {
+    r2Usage = await r2.getStorageUsage();
+  }
+  if (cdConfigured) {
+    try {
+      const result = db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(file_size), 0) as total_size FROM photos WHERE cloudinary_url IS NOT NULL').get();
+      cdUsage = { usedMB: (result.total_size / (1024 * 1024)).toFixed(2), totalCount: result.count };
+    } catch (e) { /* ignore */ }
+  }
+
+  res.render('admin/dashboard', { clientCount, photoCount, feedbackCount, contactCount, recentContacts, r2Usage, cdUsage, r2Configured, cdConfigured });
 });
 
 router.get('/clients', requireAdmin, (req, res) => {
@@ -67,6 +86,7 @@ router.post('/clients/delete/:id', requireAdmin, async (req, res) => {
   const photos = db.prepare('SELECT * FROM photos WHERE client_id = ?').all(id);
   const fs = require('fs');
   const cd = require('../utils/cloudinary');
+  const r2 = require('../utils/r2');
   for (const photo of photos) {
     if (photo.filename) {
       const filePath = path.join(__dirname, '..', 'uploads', photo.filename);
@@ -75,9 +95,41 @@ router.post('/clients/delete/:id', requireAdmin, async (req, res) => {
     if (photo.cloudinary_id) {
       await cd.deletePhoto(photo.cloudinary_id);
     }
+    if (photo.r2_key) {
+      await r2.deleteOriginal(photo.r2_key);
+    }
   }
   db.prepare('DELETE FROM clients WHERE id = ?').run(id);
+  if (req.headers['x-requested-with'] === 'XMLHttpRequest') return res.json({ success: true });
   res.redirect('/admin/clients');
+});
+
+router.post('/photos/delete', requireAdmin, async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'No photo IDs provided' });
+  }
+  const fs = require('fs');
+  const cd = require('../utils/cloudinary');
+  const r2 = require('../utils/r2');
+  let deleted = 0;
+  for (const id of ids) {
+    const photo = db.prepare('SELECT * FROM photos WHERE id = ?').get(id);
+    if (!photo) continue;
+    if (photo.filename) {
+      const filePath = path.join(__dirname, '..', 'uploads', photo.filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+    if (photo.cloudinary_id) {
+      await cd.deletePhoto(photo.cloudinary_id);
+    }
+    if (photo.r2_key) {
+      await r2.deleteOriginal(photo.r2_key);
+    }
+    db.prepare('DELETE FROM photos WHERE id = ?').run(id);
+    deleted++;
+  }
+  res.json({ success: true, deleted });
 });
 
 router.get('/gallery/:clientId', requireAdmin, (req, res) => {
@@ -87,35 +139,76 @@ router.get('/gallery/:clientId', requireAdmin, (req, res) => {
   res.render('admin/gallery', { client, photos });
 });
 
-router.post('/upload/:clientId', requireAdmin, upload.array('photos', 50), async (req, res) => {
+router.post('/upload/:clientId', requireAdmin, upload.array('photos', 1000), async (req, res) => {
   const clientId = req.params.clientId;
   const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(clientId);
   if (!client) return res.status(404).json({ error: 'Client not found' });
 
+  const uploadMode = req.query.upload_mode || 'compressed';
   const cd = require('../utils/cloudinary');
+  const r2 = require('../utils/r2');
   const cdConfigured = cd.isConfigured();
+  const r2Configured = r2.isConfigured();
+  const fs = require('fs');
 
   const insert = db.prepare(
-    'INSERT INTO photos (client_id, filename, original_name, cloudinary_id, cloudinary_url) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO photos (client_id, filename, original_name, cloudinary_id, cloudinary_url, r2_url, r2_key, file_size, upload_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
   );
   const errors = [];
   const uploaded = [];
 
   for (const file of req.files) {
     try {
-      if (cdConfigured) {
-        try {
-          const result = await cd.uploadPhoto(file.path, file.originalname);
-          insert.run(clientId, '', file.originalname, result.cloudinaryId, result.url);
-          const fs = require('fs');
-          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        } catch (cdErr) {
-          console.error('Cloudinary upload failed, falling back to local:', cdErr.message);
-          insert.run(clientId, file.filename, file.originalname, null, null);
+      let cloudinaryId = null, cloudinaryUrl = null;
+      let r2Url = null, r2Key = null;
+      let localFilename = file.filename;
+      let fileSize = file.size;
+
+      if (uploadMode === 'original') {
+        if (r2Configured) {
+          try {
+            const r2Result = await r2.uploadOriginal(file.path, file.originalname);
+            r2Url = r2Result.url;
+            r2Key = r2Result.key;
+            fileSize = r2Result.size;
+          } catch (r2Err) {
+            console.error('R2 upload failed:', r2Err.message);
+          }
+        }
+        if (cdConfigured) {
+          try {
+            const cdResult = await cd.uploadPhoto(file.path, file.originalname);
+            cloudinaryId = cdResult.cloudinaryId;
+            cloudinaryUrl = cdResult.url;
+          } catch (cdErr) {
+            console.error('Cloudinary upload failed:', cdErr.message);
+          }
         }
       } else {
-        insert.run(clientId, file.filename, file.originalname, null, null);
+        if (cdConfigured) {
+          try {
+            const cdResult = await cd.uploadPhoto(file.path, file.originalname);
+            cloudinaryId = cdResult.cloudinaryId;
+            cloudinaryUrl = cdResult.url;
+            fileSize = file.size;
+          } catch (cdErr) {
+            console.error('Cloudinary upload failed:', cdErr.message);
+          }
+        }
       }
+
+      if (!cloudinaryUrl && !r2Url) {
+        localFilename = file.filename;
+      } else {
+        localFilename = '';
+      }
+
+      insert.run(clientId, localFilename, file.originalname, cloudinaryId, cloudinaryUrl, r2Url, r2Key, fileSize, uploadMode);
+
+      if ((r2Url || cloudinaryUrl) && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+
       uploaded.push(file.originalname);
     } catch (err) {
       errors.push(file.originalname);
@@ -135,6 +228,10 @@ router.post('/photo/delete/:id', requireAdmin, async (req, res) => {
   if (photo.cloudinary_id) {
     const cd = require('../utils/cloudinary');
     await cd.deletePhoto(photo.cloudinary_id);
+  }
+  if (photo.r2_key) {
+    const r2 = require('../utils/r2');
+    await r2.deleteOriginal(photo.r2_key);
   }
   db.prepare('DELETE FROM photos WHERE id = ?').run(photo.id);
   res.redirect('/admin/gallery/' + photo.client_id);
