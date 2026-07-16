@@ -1,14 +1,23 @@
 const nodemailer = require('nodemailer');
 
+const port = parseInt(process.env.SMTP_PORT || '465');
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
+  port: port,
+  secure: port === 465,
   auth: {
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || ''
-  }
+  },
+  tls: { rejectUnauthorized: false },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
+
+transporter.verify()
+  .then(() => console.log('SMTP OK'))
+  .catch(err => console.error('SMTP FAILED:', err.code, err.message));
 
 async function sendContactEmail({ name, email, phone, event_type, event_date, message }) {
   const to = process.env.NOTIFY_EMAIL || 'admin@aropnweddings.com';
@@ -25,10 +34,13 @@ async function sendContactEmail({ name, email, phone, event_type, event_date, me
     </table>
   `;
   try {
+    console.log('Attempting to send email from:', process.env.SMTP_USER, 'to:', to);
     await transporter.sendMail({ from: `"Aropn Weddings" <${process.env.SMTP_USER || email}>`, to, subject, html });
+    console.log('Email sent successfully');
     return true;
   } catch (err) {
     console.error('Email send failed:', err.message);
+    console.error('Full error:', err);
     return false;
   }
 }
