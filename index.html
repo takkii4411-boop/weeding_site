@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aropn Weddings — Capturing Your Forever</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Great+Vibes&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream: #faf6f0;
+  --cream-dark: #f0e8dc;
+  --gold: #c9a96c;
+  --gold-light: #e8d5a8;
+  --gold-dark: #a8884a;
+  --burgundy: #6b2d3e;
+  --burgundy-dark: #4a1f2b;
+  --blush: #f2e0d4;
+  --charcoal: #2c2420;
+  --warm-black: #1a1513;
+  --white: #ffffff;
+  --muted: #8a7e78;
+  --shadow: rgba(44, 36, 32, 0.12);
+  --transition-slow: 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+  --neon-pink: #ff2d95;
+  --neon-cyan: #00f0ff;
+  --neon-purple: #b300ff;
+  --neon-glow: 0 0 10px rgba(255, 45, 149, 0.4), 0 0 30px rgba(255, 45, 149, 0.15);
+  --neon-glow-cyan: 0 0 10px rgba(0, 240, 255, 0.4), 0 0 30px rgba(0, 240, 255, 0.15);
+  --cyber-font: 'Orbitron', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ── SLOW REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 1s ease-out, transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.2s; }
+.reveal-delay-2 { transition-delay: 0.4s; }
+.reveal-delay-3 { transition-delay: 0.6s; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28px 48px;
+  background: transparent;
+  transition: all 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+}
+nav.scrolled {
+  padding: 14px 48px;
+  background: rgba(250, 246, 240, 0.92);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 1px 0 rgba(44, 36, 32, 0.08);
+}
+.nav-logo {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.8rem;
+  color: var(--burgundy);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+nav.scrolled .nav-logo { color: var(--burgundy); }
+.nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
+.nav-links a {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: color 0.3s;
+  font-weight: 500;
+}
+nav.scrolled .nav-links a { color: var(--muted); }
+.nav-links a:hover { color: var(--gold); }
+nav.scrolled .nav-links a:hover { color: var(--burgundy); }
+.nav-cta {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--gold);
+  padding: 10px 24px;
+  text-decoration: none;
+  transition: all 0.4s;
+  font-weight: 600;
+}
+.nav-cta:hover {
+  background: var(--gold-dark);
+  transform: translateY(-1px);
+}
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+.menu-toggle span {
+  width: 24px; height: 2px;
+  background: var(--white);
+  transition: all 0.3s;
+}
+nav.scrolled .menu-toggle span { background: var(--charcoal); }
+
+/* ── HERO SLIDESHOW (SLOW FADE) ── */
+.hero {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+.slide-container {
+  position: absolute; inset: 0;
+}
+.slide {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide.active {
+  opacity: 1;
+}
+.slide::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(26,21,19,0.65) 0%, rgba(26,21,19,0.25) 50%, rgba(26,21,19,0.4) 100%);
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  text-align: center;
+  z-index: 2;
+  padding: 80px 24px;
+}
+.hero-tag {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  color: var(--gold-light);
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.8rem, 8vw, 6.5rem);
+  color: var(--white);
+  line-height: 1.08;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.hero-sub {
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  color: rgba(255,255,255,0.8);
+  max-width: 560px;
+  margin-bottom: 40px;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+}
+.hero-btn {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--white);
+  border: 2px solid var(--gold);
+  padding: 16px 40px;
+  text-decoration: none;
+  transition: all 0.5s;
+  font-weight: 600;
+  background: transparent;
+}
+.hero-btn:hover {
+  background: var(--gold);
+  color: var(--white);
+}
+.slide-nav {
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 14px; z-index: 3;
+}
+.slide-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.8s;
+}
+.slide-dot.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  width: 32px;
+  border-radius: 5px;
+}
+
+/* ── SECTION COMMON ── */
+section { padding: 100px 48px; }
+.section-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 60px;
+}
+.section-tag {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.6rem;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--charcoal);
+  font-weight: 600;
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}
+.section-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+/* ── ABOUT ── */
+.about {
+  background: var(--white);
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.about-image {
+  aspect-ratio: 3/4;
+  background: var(--cream-dark);
+  position: relative;
+  overflow: hidden;
+}
+.about-image::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--gold-light), transparent);
+  opacity: 0.15;
+}
+.about-image svg {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 60px; height: 60px;
+  color: var(--gold);
+  opacity: 0.4;
+}
+.about-content h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: var(--charcoal);
+}
+.about-content p {
+  color: var(--muted);
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+.signature {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.8rem;
+  color: var(--gold);
+  margin-top: 24px;
+}
+
+/* ── SERVICES ── */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.service-card {
+  background: var(--white);
+  padding: 40px 32px;
+  text-align: center;
+  border: 1px solid rgba(201, 169, 108, 0.15);
+  transition: all 0.5s;
+  position: relative;
+  overflow: hidden;
+}
+.service-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s;
+}
+.service-card:hover::before {
+  transform: scaleX(1);
+}
+.service-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 48px var(--shadow);
+  border-color: var(--gold-light);
+}
+.service-icon {
+  font-size: 2.4rem;
+  margin-bottom: 20px;
+  display: block;
+}
+.service-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  color: var(--charcoal);
+}
+.service-card p {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.service-price {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  border-bottom: 1px solid var(--gold-light);
+  padding-bottom: 2px;
+}
+
+/* ── PORTFOLIO / GALLERY ── */
+.portfolio {
+  background: var(--warm-black);
+}
+.portfolio .section-title { color: var(--white); }
+.portfolio .section-sub { color: rgba(255,255,255,0.6); }
+.filter-btns {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all 0.4s;
+  font-weight: 500;
+}
+.filter-btn:hover,
+.filter-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201, 169, 108, 0.08);
+}
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.gallery-item {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(255,255,255,0.03);
+}
+.gallery-item.wide { grid-column: span 2; grid-row: span 1; }
+.gallery-item.tall { grid-column: span 1; grid-row: span 2; }
+.gallery-img {
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 1.2s cubic-bezier(0.2, 1, 0.3, 1);
+}
+.gallery-item:hover .gallery-img {
+  transform: scale(1.08);
+}
+.gallery-overlay {
+  position: absolute; inset: 0;
+  background: rgba(26, 21, 19, 0.7);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  opacity: 0;
+  transition: opacity 0.6s;
+  padding: 24px;
+  text-align: center;
+}
+.gallery-item:hover .gallery-overlay {
+  opacity: 1;
+}
+.gallery-overlay span {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.gallery-overlay small {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+
+/* ── TESTIMONIALS ── */
+.testimonials {
+  background: var(--white);
+  overflow: hidden;
+}
+.testimonial-slider {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.testimonial-track {
+  display: flex;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.testimonial-card {
+  min-width: 100%;
+  padding: 0 20px;
+  text-align: center;
+}
+.testimonial-stars {
+  color: var(--gold);
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  letter-spacing: 4px;
+}
+.testimonial-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-style: italic;
+  color: var(--charcoal);
+  line-height: 1.7;
+  margin-bottom: 24px;
+  quotes: "“" "”" "‘" "’";
+}
+.testimonial-text::before { content: "“"; }
+.testimonial-text::after { content: "”"; }
+.testimonial-author {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--burgundy);
+}
+.testimonial-role {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.testimonial-nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+.testimonial-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--cream-dark);
+  border: none;
+  cursor: pointer;
+  transition: all 0.5s;
+}
+.testimonial-dot.active {
+  background: var(--gold);
+  width: 28px;
+  border-radius: 4px;
+}
+.testimonial-arrows {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.testimonial-arrow {
+  width: 44px; height: 44px;
+  border: 1px solid var(--cream-dark);
+  background: var(--white);
+  cursor: pointer;
+  display: grid; place-items: center;
+  transition: all 0.3s;
+  font-size: 1.1rem;
+  color: var(--charcoal);
+}
+.testimonial-arrow:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ── STATS ── */
+.stats {
+  background: var(--burgundy);
+  padding: 80px 48px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 3rem;
+  color: var(--gold);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-top: 8px;
+}
+
+/* ── CONTACT ── */
+.contact {
+  background: var(--cream);
+}
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.contact-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  margin-bottom: 16px;
+  color: var(--charcoal);
+}
+.contact-info p {
+  color: var(--muted);
+  margin-bottom: 32px;
+  font-size: 0.95rem;
+}
+.contact-detail {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.contact-detail .icon {
+  width: 44px; height: 44px;
+  border: 1px solid var(--gold-light);
+  display: grid; place-items: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.contact-detail .label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.contact-detail .value {
+  font-size: 0.95rem;
+  color: var(--charcoal);
+  font-weight: 500;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid rgba(201, 169, 108, 0.25);
+  background: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: var(--charcoal);
+  transition: all 0.3s;
+  outline: none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 169, 108, 0.1);
+}
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.submit-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--gold);
+  border: none;
+  padding: 16px 40px;
+  cursor: pointer;
+  transition: all 0.4s;
+  font-weight: 600;
+  width: 100%;
+}
+.submit-btn:hover {
+  background: var(--gold-dark);
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--warm-black);
+  padding: 60px 48px 32px;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 60px;
+  max-width: 1100px;
+  margin: 0 auto 48px;
+}
+.footer-brand .nav-logo {
+  font-size: 2rem;
+  color: var(--gold);
+}
+.footer-brand p {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+  margin-top: 16px;
+  max-width: 300px;
+  line-height: 1.7;
+}
+.footer-col h4 {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 24px;
+}
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 12px; }
+.footer-col a {
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.3s;
+}
+.footer-col a:hover { color: var(--gold); }
+.footer-social {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+.footer-social a {
+  width: 40px; height: 40px;
+  border: 1px solid rgba(255,255,255,0.12);
+  display: grid; place-items: center;
+  transition: all 0.3s;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.footer-social a:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201, 169, 108, 0.08);
+}
+.footer-bottom {
+  max-width: 1100px; margin: 0 auto;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+}
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  position: fixed; inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.lightbox.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+}
+.lightbox-close {
+  position: absolute; top: 24px; right: 32px;
+  background: none; border: none;
+  color: var(--white);
+  font-size: 2rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.lightbox-close:hover { opacity: 1; }
+.lightbox-prev,
+.lightbox-next {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--white);
+  font-size: 2rem;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+  padding: 20px;
+}
+.lightbox-prev:hover,
+.lightbox-next:hover { opacity: 1; }
+.lightbox-prev { left: 16px; }
+.lightbox-next { right: 16px; }
+.lightbox-caption {
+  position: absolute; bottom: 32px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+  font-family: 'Playfair Display', serif;
+}
+
+/* ── CRT VIGNETTE OVERLAY ── */
+.scanline-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.15) 100%);
+  animation: flicker 0.15s infinite alternate;
+}
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  100% { opacity: 1; }
+}
+
+/* ── NEON CYBERPUNK ADDITIONS ── */
+.neon-text {
+  text-shadow: 0 0 7px rgba(255, 45, 149, 0.6), 0 0 20px rgba(255, 45, 149, 0.3);
+}
+.neon-text-cyan {
+  text-shadow: 0 0 7px rgba(0, 240, 255, 0.6), 0 0 20px rgba(0, 240, 255, 0.3);
+}
+.neon-border {
+  border: 1px solid var(--neon-pink);
+  box-shadow: var(--neon-glow);
+}
+.neon-border-cyan {
+  border: 1px solid var(--neon-cyan);
+  box-shadow: var(--neon-glow-cyan);
+}
+.neon-glow-hover {
+  transition: all 0.4s;
+}
+.neon-glow-hover:hover {
+  box-shadow: var(--neon-glow);
+  border-color: var(--neon-pink);
+}
+.cyber-tag {
+  font-family: var(--cyber-font);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 7px rgba(0, 240, 255, 0.4);
+}
+
+.hero-btn {
+  position: relative;
+  overflow: hidden;
+}
+.hero-btn::after {
+  content: '';
+  position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: conic-gradient(
+    transparent,
+    rgba(255, 45, 149, 0.1),
+    transparent 30%,
+    transparent 70%,
+    rgba(0, 240, 255, 0.1),
+    transparent
+  );
+  animation: rotateGlow 4s linear infinite;
+}
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.hero-btn:hover::after {
+  opacity: 0;
+}
+.hero-btn:hover {
+  background: var(--neon-pink);
+  border-color: var(--neon-pink);
+  box-shadow: var(--neon-glow);
+  text-shadow: 0 0 7px rgba(255,255,255,0.5);
+}
+
+.service-card:hover {
+  box-shadow: var(--neon-glow-cyan);
+  border-color: var(--neon-cyan);
+}
+.service-card:hover::before {
+  background: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.submit-btn {
+  position: relative;
+  overflow: hidden;
+}
+.submit-btn:hover {
+  background: var(--neon-pink);
+  box-shadow: var(--neon-glow);
+}
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.nav-cta {
+  position: relative;
+  overflow: hidden;
+}
+.nav-cta:hover {
+  background: var(--neon-pink);
+  border-color: var(--neon-pink);
+  box-shadow: var(--neon-glow);
+}
+
+.filter-btn.active {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  box-shadow: var(--neon-glow);
+}
+
+.testimonial-dot.active {
+  background: var(--neon-pink);
+  box-shadow: 0 0 8px rgba(255, 45, 149, 0.5);
+}
+
+.slide-dot.active {
+  background: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.stats {
+  background: linear-gradient(135deg, var(--burgundy-dark), #1a0a1a, var(--burgundy-dark));
+}
+.stat-num {
+  text-shadow: 0 0 10px rgba(201, 169, 108, 0.3);
+}
+
+.portfolio {
+  background: linear-gradient(135deg, var(--warm-black), #0d0a12, var(--warm-black));
+}
+
+.gallery-overlay {
+  background: linear-gradient(135deg, rgba(26,21,19,0.8), rgba(10,0,20,0.85));
+}
+.gallery-overlay span {
+  text-shadow: 0 0 7px rgba(255, 45, 149, 0.4);
+}
+
+.lightbox {
+  background: rgba(0,0,0,0.95);
+}
+
+.contact-detail .icon {
+  transition: all 0.3s;
+}
+.contact-detail:hover .icon {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  color: var(--neon-cyan);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1), 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.hero-tag {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  color: var(--gold-light);
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(201, 169, 108, 0.3);
+}
+
+.section-tag {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.6rem;
+  color: var(--gold);
+  margin-bottom: 8px;
+  text-shadow: 0 0 8px rgba(201, 169, 108, 0.2);
+}
+
+.footer-social a:hover {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  box-shadow: var(--neon-glow);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1000px) {
+  nav { padding: 20px 24px; }
+  nav.scrolled { padding: 12px 24px; }
+  .nav-links { display: none; }
+  .menu-toggle { display: flex; }
+  .nav-links.open {
+    display: flex;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(26,21,19,0.98);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+  }
+  .nav-links.open a {
+    font-size: 0.9rem;
+    color: var(--white);
+  }
+  .menu-toggle.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .menu-toggle.open span:nth-child(2) { opacity: 0; }
+  .menu-toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+  section { padding: 64px 24px; }
+  .about-grid { grid-template-columns: 1fr; gap: 32px; }
+  .services-grid { grid-template-columns: 1fr; gap: 16px; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; }
+  .gallery-item.wide,
+  .gallery-item.tall { grid-column: auto; grid-row: auto; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+
+@media (max-width: 600px) {
+  .gallery-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 2.4rem; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stat-num { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Aropn<span style="color:var(--neon-cyan); text-shadow:0 0 7px rgba(0,240,255,0.5);">.</span></a>
+  <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
+    <li><a href="#testimonials">Stories</a></li>
+    <li><a href="#contact" class="nav-cta">Book Now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO with SLOW FADE SLIDESHOW -->
+<section class="hero" id="home">
+  <div class="slide-container" id="heroSlides">
+    <div class="slide active" style="background-image: linear-gradient(135deg, rgba(201,169,108,0.1), rgba(107,45,62,0.2)), url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80');"></div>
+    <div class="slide" style="background-image: linear-gradient(135deg, rgba(201,169,108,0.1), rgba(107,45,62,0.2)), url('https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=1600&q=80');"></div>
+    <div class="slide" style="background-image: linear-gradient(135deg, rgba(201,169,108,0.1), rgba(107,45,62,0.2)), url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1600&q=80');"></div>
+    <div class="slide" style="background-image: linear-gradient(135deg, rgba(201,169,108,0.1), rgba(107,45,62,0.2)), url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1600&q=80');"></div>
+  </div>
+  <div class="hero-overlay">
+    <div class="hero-tag reveal">Aropn Weddings</div>
+    <h1 class="hero-title reveal reveal-delay-1">Your Love Story,<br>Timelessly Captured</h1>
+    <p class="hero-sub reveal reveal-delay-2">Wedding, pre-wedding & event photography that turns your most precious moments into heirloom artistry.</p>
+    <a href="#contact" class="hero-btn reveal reveal-delay-3">Book Your Session</a>
+  </div>
+  <div class="slide-nav" id="slideNav">
+    <button class="slide-dot active" data-index="0"></button>
+    <button class="slide-dot" data-index="1"></button>
+    <button class="slide-dot" data-index="2"></button>
+    <button class="slide-dot" data-index="3"></button>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-grid">
+    <div class="about-image reveal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+    </div>
+    <div class="about-content reveal reveal-delay-1">
+      <div class="section-tag">The Storyteller</div>
+      <h3>Capturing Love in Every Frame</h3>
+      <p>Every couple has a unique story — and I believe photography should feel just as natural and beautiful as the moments it preserves. With over 8 years of experience in wedding and event photography, I've had the privilege of documenting love stories across the country.</p>
+      <p>My style is a blend of fine-art elegance and candid photojournalism. I don't just take photos — I capture emotions, stolen glances, laughter, and tears of joy. Every image is crafted to bring you back to that exact feeling, years from now.</p>
+      <div class="signature">~ Aropn</div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="section-header reveal">
+    <div class="section-tag">What I Offer</div>
+    <h2 class="section-title">Wedding & Event Coverage</h2>
+    <p class="section-sub">Tailored packages designed to capture every moment of your special day, from intimate pre-wedding shoots to grand wedding celebrations.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <span class="service-icon">💑</span>
+      <h3>Pre-Wedding Shoot</h3>
+      <p>A relaxed, creative session before the big day. Perfect for getting comfortable in front of the camera and creating timeless couple portraits.</p>
+      <span class="service-price">Starting ₹15,000</span>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <span class="service-icon">💒</span>
+      <h3>Wedday Coverage</h3>
+      <p>Full-day wedding coverage from bridal prep to the final dance. Every ritual, emotion, and celebration documented with artistry.</p>
+      <span class="service-price">Starting ₹35,000</span>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <span class="service-icon">🎉</span>
+      <h3>Reception Party</h3>
+      <p>Candid and vibrant coverage of your reception — the joy, the toasts, the dance floor, and every smile shared with loved ones.</p>
+      <span class="service-price">Starting ₹20,000</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-icon">💍</span>
+      <h3>Engagement Shoot</h3>
+      <p>Celebrate your engagement with a beautiful photoshoot at a location of your choice. Perfect for save-the-dates and wedding invites.</p>
+      <span class="service-price">Starting ₹12,000</span>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <span class="service-icon">🎬</span>
+      <h3>Cinematic Film</h3>
+      <p>A highlight film that tells your love story through motion, music, and emotion. Professionally edited cinematic wedding film.</p>
+      <span class="service-price">Starting ₹25,000</span>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <span class="service-icon">📸</span>
+      <h3>Event Photography</h3>
+      <p>Birthdays, anniversaries, family gatherings, and celebrations — professional coverage for all your special events.</p>
+      <span class="service-price">Starting ₹10,000</span>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO / GALLERY -->
+<section class="portfolio" id="portfolio">
+  <div class="section-header reveal">
+    <div class="section-tag">Our Gallery</div>
+    <h2 class="section-title">Moments We've Captured</h2>
+    <p class="section-sub">A glimpse into the love stories and celebrations we've been honored to document.</p>
+  </div>
+  <div class="filter-btns reveal">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pre-wedding">Pre-Wedding</button>
+    <button class="filter-btn" data-filter="wedding">Wedding</button>
+    <button class="filter-btn" data-filter="reception">Reception</button>
+    <button class="filter-btn" data-filter="engagement">Engagement</button>
+  </div>
+  <div class="gallery-grid" id="galleryGrid">
+    <div class="gallery-item wide reveal" data-category="wedding" style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80');">
+      <div class="gallery-img" style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80');"></div>
+      <div class="gallery-overlay"><span>Ananya & Rahul</span><small>Wedding</small></div>
+    </div>
+    <div class="gallery-item reveal" data-category="pre-wedding" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80');">
+      <div class="gallery-img" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80');"></div>
+      <div class="gallery-overlay"><span>Priya & Arjun</span><small>Pre-Wedding</small></div>
+    </div>
+    <div class="gallery-item tall reveal" data-category="reception" style="background-image: url('https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=600&q=80');">
+      <div class="gallery-img" style="background-image: url('https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=600&q=80');"></div>
+      <div class="gallery-overlay"><span>Neha & Vikram</span><small>Reception</small></div>
+    </div>
+    <div class="gallery-item reveal" data-category="engagement" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600&q=80');">
+      <div class="gallery-img" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600&q=80');"></div>
+      <div class="gallery-overlay"><span>Deepa & Suresh</span><small>Engagement</small></div>
+    </div>
+    <div class="gallery-item reveal" data-category="wedding" style="background-image: url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=80');">
+      <div class="gallery-img" style="background-image: url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=80');"></div>
+      <div class="gallery-overlay"><span>Kavya & Rohan</span><small>Wedding</small></div>
+    </div>
+    <div class="gallery-item wide reveal" data-category="pre-wedding" style="background-image: url('https://images.unsplash.com/photo-1529636798458-92182e662485?w=600&q=80');">
+      <div class="gallery-img" style="background-image: url('https://images.unsplash.com/photo-1529636798458-92182e662485?w=600&q=80');"></div>
+      <div class="gallery-overlay"><span>Meera & Akash</span><small>Pre-Wedding</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="testimonials">
+  <div class="section-header reveal">
+    <div class="section-tag">Love Letters</div>
+    <h2 class="section-title">What Couples Say</h2>
+    <p class="section-sub">Read heartfelt words from the couples who trusted us with their most cherished moments.</p>
+  </div>
+  <div class="testimonial-slider reveal">
+    <div class="testimonial-track" id="testimonialTrack">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">Aropn didn't just photograph our wedding — she told our story. Every time we look at the photos, we're transported back to that day. The emotions, the laughter, the tears — she captured it all with such grace.</p>
+        <div class="testimonial-author">Ananya & Rahul</div>
+        <div class="testimonial-role">Wedding, Jaipur</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">Our pre-wedding shoot was an absolute dream! Aropn made us feel so comfortable and natural. The photos are stunning — we keep getting compliments from everyone. Worth every penny!</p>
+        <div class="testimonial-author">Priya & Arjun</div>
+        <div class="testimonial-role">Pre-Wedding, Udaipur</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">From the engagement shoot to the reception, Aropn was with us through every milestone. Her eye for detail is incredible. She catches moments we didn't even notice were happening!</p>
+        <div class="testimonial-author">Neha & Vikram</div>
+        <div class="testimonial-role">Full Wedding, Delhi</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">We were nervous about being in front of the camera, but Aropn made the entire experience so fun and natural. The candid shots are our favorites — she has a gift for capturing real emotions.</p>
+        <div class="testimonial-author">Deepa & Suresh</div>
+        <div class="testimonial-role">Engagement, Goa</div>
+      </div>
+    </div>
+    <div class="testimonial-nav" id="testimonialNav">
+      <button class="testimonial-dot active" data-index="0"></button>
+      <button class="testimonial-dot" data-index="1"></button>
+      <button class="testimonial-dot" data-index="2"></button>
+      <button class="testimonial-dot" data-index="3"></button>
+    </div>
+    <div class="testimonial-arrows">
+      <button class="testimonial-arrow" id="prevTestimonial">←</button>
+      <button class="testimonial-arrow" id="nextTestimonial">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-grid">
+    <div class="reveal"><div class="stat-num" data-count="500">0</div><div class="stat-label">Weddings Shot</div></div>
+    <div class="reveal reveal-delay-1"><div class="stat-num" data-count="8">0</div><div class="stat-label">Years Experience</div></div>
+    <div class="reveal reveal-delay-2"><div class="stat-num" data-count="50">0</div><div class="stat-label">Cities Covered</div></div>
+    <div class="reveal reveal-delay-3"><div class="stat-num" data-count="98">0</div><div class="stat-label">Happy Couples</div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="section-header reveal">
+    <div class="section-tag">Get In Touch</div>
+    <h2 class="section-title">Let's Plan Your Story</h2>
+    <p class="section-sub">Tell us about your dream wedding or event. We'd love to hear from you and create something beautiful together.</p>
+  </div>
+  <div class="contact-grid">
+    <div class="contact-info reveal">
+      <h3>Let's Talk</h3>
+      <p>Whether you're planning a grand wedding, an intimate pre-wedding shoot, or a special event — we're here to make it unforgettable.</p>
+      <div class="contact-detail">
+        <div class="icon">✉</div>
+        <div><div class="label">Email</div><div class="value">hello@aropnweddings.com</div></div>
+      </div>
+      <div class="contact-detail">
+        <div class="icon">☎</div>
+        <div><div class="label">Phone</div><div class="value">+91 98765 43210</div></div>
+      </div>
+      <div class="contact-detail">
+        <div class="icon">📍</div>
+        <div><div class="label">Location</div><div class="value">Mumbai, India</div></div>
+      </div>
+      <div class="contact-detail">
+        <div class="icon">⏰</div>
+        <div><div class="label">Response Time</div><div class="value">Typically within 24 hours</div></div>
+      </div>
+    </div>
+    <form class="reveal reveal-delay-1" id="contactForm">
+      <div class="form-group">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" placeholder="e.g. Ananya Sharma" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="e.g. ananya@email.com" required>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" placeholder="e.g. +91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label for="event-type">Event Type</label>
+        <select id="event-type">
+          <option value="">Select event type</option>
+          <option>Pre-Wedding Shoot</option>
+          <option>Wedding Day</option>
+          <option>Reception</option>
+          <option>Engagement</option>
+          <option>Cinematic Film</option>
+          <option>Other Event</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="event-date">Event Date</label>
+        <input type="date" id="event-date">
+      </div>
+      <div class="form-group">
+        <label for="message">Your Message</label>
+        <textarea id="message" placeholder="Tell us about your vision, location, and any special requirements..." required></textarea>
+      </div>
+      <button type="submit" class="submit-btn">Send Message</button>
+      <p style="text-align:center; margin-top:12px; font-size:0.8rem; color:var(--muted);" id="formStatus"></p>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand reveal">
+      <div class="nav-logo" style="font-size:2rem; color:var(--gold);">Aropn</div>
+      <p>Capturing timeless love stories through the lens. Wedding, pre-wedding & event photography that turns moments into heirlooms.</p>
+      <div class="footer-social">
+        <a href="#" title="Instagram">IG</a>
+        <a href="#" title="Facebook">FB</a>
+        <a href="#" title="YouTube">YT</a>
+        <a href="#" title="Pinterest">PT</a>
+      </div>
+    </div>
+    <div class="footer-col reveal reveal-delay-1">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#portfolio">Portfolio</a></li>
+        <li><a href="#testimonials">Testimonials</a></li>
+      </ul>
+    </div>
+    <div class="footer-col reveal reveal-delay-2">
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#services">Pre-Wedding</a></li>
+        <li><a href="#services">Wedding</a></li>
+        <li><a href="#services">Reception</a></li>
+        <li><a href="#services">Cinematic Film</a></li>
+      </ul>
+    </div>
+    <div class="footer-col reveal reveal-delay-3">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:hello@aropnweddings.com">hello@aropnweddings.com</a></li>
+        <li><a href="tel:+919876543210">+91 98765 43210</a></li>
+        <li><a href="#contact">Book a Session</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Aropn Weddings. All rights reserved.</p>
+    <p>Crafted with ♥ for love stories</p>
+  </div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <button class="lightbox-prev" id="lightboxPrev">‹</button>
+  <button class="lightbox-next" id="lightboxNext">›</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<div class="scanline-overlay"></div>
+
+<script>
+// ── SLOW HERO SLIDESHOW (SLOW FADE) ──
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slide-dot');
+  let current = 0;
+  let interval;
+
+  function goToSlide(index) {
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    slides[index].classList.add('active');
+    dots[index].classList.add('active');
+    current = index;
+  }
+
+  function nextSlide() {
+    goToSlide((current + 1) % slides.length);
+  }
+
+  function startSlideshow() {
+    interval = setInterval(nextSlide, 6000); // SLOW — 6 seconds per slide
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', function() {
+      clearInterval(interval);
+      goToSlide(parseInt(this.dataset.index));
+      startSlideshow();
+    });
+  });
+
+  goToSlide(0);
+  startSlideshow();
+})();
+
+// ── MOBILE MENU ──
+(function() {
+  const toggle = document.getElementById('menuToggle');
+  const links = document.getElementById('navLinks');
+  toggle.addEventListener('click', function() {
+    this.classList.toggle('open');
+    links.classList.toggle('open');
+  });
+  links.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', function() {
+      toggle.classList.remove('open');
+      links.classList.remove('open');
+    });
+  });
+})();
+
+// ── SLOW SCROLL REVEAL ──
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+})();
+
+// ── NAV SCROLL EFFECT ──
+(function() {
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  });
+})();
+
+// ── PORTFOLIO FILTER ──
+(function() {
+  const btns = document.querySelectorAll('.filter-btn');
+  const items = document.querySelectorAll('.gallery-item');
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      btns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const filter = this.dataset.filter;
+
+      items.forEach(item => {
+        if (filter === 'all' || item.dataset.category === filter) {
+          item.style.display = 'block';
+          item.style.opacity = '0';
+          setTimeout(() => { item.style.opacity = '1'; }, 50);
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  });
+})();
+
+// ── LIGHTBOX ──
+(function() {
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  const closeBtn = document.getElementById('lightboxClose');
+  const prevBtn = document.getElementById('lightboxPrev');
+  const nextBtn = document.getElementById('lightboxNext');
+  let currentIndex = 0;
+  let galleryItems = [];
+
+  function openLightbox(index) {
+    currentIndex = index;
+    const item = galleryItems[index];
+    const bg = item.querySelector('.gallery-img').style.backgroundImage;
+    const url = bg.replace(/^url\(['"](.+)['"]\)$/, '$1');
+    const title = item.querySelector('.gallery-overlay span').textContent;
+    const category = item.querySelector('.gallery-overlay small').textContent;
+    lightboxImg.src = url;
+    lightboxCaption.textContent = title + ' — ' + category;
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.querySelectorAll('.gallery-item').forEach((item, i) => {
+    galleryItems.push(item);
+    item.addEventListener('click', function() {
+      openLightbox(i);
+    });
+  });
+
+  closeBtn.addEventListener('click', function() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  prevBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    currentIndex = (currentIndex - 1 + galleryItems.length) % galleryItems.length;
+    openLightbox(currentIndex);
+  });
+
+  nextBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    currentIndex = (currentIndex + 1) % galleryItems.length;
+    openLightbox(currentIndex);
+  });
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeBtn.click();
+    if (e.key === 'ArrowLeft') prevBtn.click();
+    if (e.key === 'ArrowRight') nextBtn.click();
+  });
+})();
+
+// ── TESTIMONIAL SLIDER ──
+(function() {
+  const track = document.getElementById('testimonialTrack');
+  const dots = document.querySelectorAll('#testimonialNav .testimonial-dot');
+  const prev = document.getElementById('prevTestimonial');
+  const next = document.getElementById('nextTestimonial');
+  let current = 0;
+  const total = dots.length;
+
+  function goTo(index) {
+    current = index;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach(d => d.classList.remove('active'));
+    dots[current].classList.add('active');
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', function() {
+      goTo(parseInt(this.dataset.index));
+    });
+  });
+
+  prev.addEventListener('click', function() {
+    goTo((current - 1 + total) % total);
+  });
+
+  next.addEventListener('click', function() {
+    goTo((current + 1) % total);
+  });
+
+  setInterval(function() {
+    goTo((current + 1) % total);
+  }, 5000);
+})();
+
+// ── COUNTER ANIMATION ──
+(function() {
+  const counters = document.querySelectorAll('.stat-num');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const target = parseInt(entry.target.dataset.count);
+        let current = 0;
+        const step = Math.ceil(target / 60);
+        const interval = setInterval(function() {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(interval);
+          }
+          entry.target.textContent = current + (target === 98 ? '%' : '+');
+        }, 30);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => observer.observe(c));
+})();
+
+// ── CONTACT FORM ──
+(function() {
+  const form = document.getElementById('contactForm');
+  const status = document.getElementById('formStatus');
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const event_type = document.getElementById('event-type').value;
+    const event_date = document.getElementById('event-date').value;
+    const message = document.getElementById('message').value.trim();
+
+    if (!name || !email || !message) {
+      status.textContent = 'Please fill in all required fields.';
+      status.style.color = '#c0392b';
+      return;
+    }
+
+    status.textContent = 'Sending...';
+    status.style.color = 'var(--muted)';
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, event_type, event_date, message })
+      });
+      const data = await res.json();
+      if (data.success) {
+        status.textContent = 'Thank you, ' + name + '! Your message has been sent. We will get back to you within 24 hours.';
+        status.style.color = 'var(--gold-dark)';
+        form.reset();
+      } else {
+        status.textContent = data.error || 'Something went wrong. Please try again.';
+        status.style.color = '#c0392b';
+      }
+    } catch (err) {
+      status.textContent = 'Network error. Please check your connection and try again.';
+      status.style.color = '#c0392b';
+    }
+  });
+})();
+
+// ── CRT SCANLINE TOGGLE (optional) ──
+(function() {
+  const overlay = document.querySelector('.scanline-overlay');
+  if (overlay && window.innerWidth < 768) {
+    overlay.style.opacity = '0.4';
+  }
+})();
+
+// ── SMOOTH PARALLAX ON SCROLL ──
+(function() {
+  window.addEventListener('scroll', function() {
+    const scrolled = window.pageYOffset;
+    const hero = document.querySelector('.hero');
+    if (hero && scrolled < hero.offsetHeight) {
+      const slides = hero.querySelectorAll('.slide.active');
+      slides.forEach(s => {
+        s.style.transform = `translateY(${scrolled * 0.3}px)`;
+      });
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

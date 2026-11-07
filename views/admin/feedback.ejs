@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback - Aropn Weddings Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-layout">
+    <%- include('sidebar') %>
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1>Client Feedback</h1>
+      </div>
+      <% if (feedback.length === 0) { %>
+      <div class="empty-state"><p>No feedback received yet.</p></div>
+      <% } else { %>
+      <div class="feedback-list">
+        <% feedback.forEach(f => { %>
+        <div class="feedback-card">
+          <div class="feedback-header">
+            <strong><%= f.name %></strong>
+            <span class="feedback-client">for <%= f.client_name %></span>
+            <span class="feedback-rating"><%= '★'.repeat(f.rating) %><%= '☆'.repeat(5-f.rating) %></span>
+          </div>
+          <div class="feedback-email"><%= f.email %></div>
+          <% if (f.message) { %>
+          <div class="feedback-message"><%= f.message %></div>
+          <% } %>
+          <div class="feedback-date"><%= new Date(f.created_at).toLocaleString() %></div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </main>
+  </div>
+</body>
+</html>
